@@ -22,7 +22,7 @@ class ProdutoOut(BaseModel):
     codigo_cardapio: str = Field(min_length=2, max_length=50)
     nome: str = Field(min_length=2, max_length=50)
     descricao: str = Field(max_length=255)
-    preco: float = Field(ge=0)
+    preco: float = Field(gt=0)
     restricao: str = Field(min_length=2, max_length=20)
 
     @validator('codigo', 'codigo_cardapio')
@@ -33,7 +33,7 @@ class ProdutoIn(BaseModel):
     codigo_cardapio: str = Field(min_length=2, max_length=50)
     nome: str = Field(min_length=2, max_length=50)
     descricao: str = Field(max_length=255)
-    preco: float = Field(ge=0)
+    preco: float = Field(gt=0)
     restricao: str = Field(min_length=2, max_length=20)
 
     @validator('codigo_cardapio')
@@ -41,4 +41,4 @@ class ProdutoIn(BaseModel):
         return Utilidades.is_alnum_under(codigo)
  
 class PrecoProduto(BaseModel):
-    preco: float = Field(ge=0)
+    preco: float = Field(gt=0)
