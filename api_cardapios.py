@@ -1,70 +1,93 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-import db
 import dtos
 from util import Utilidades
+from repositorio_cardapio import RepositorioCardapio as RCardapio
+from repositorio_produto import RepositorioProduto as RProduto
+from dependencias import obter_repo_cardapio, obter_repo_produto
 
 router = APIRouter()
 
 @router.get('/cardapio/')
-async def listar_cardapios():
- 
-    return list(db.banco_cardapios.values())
+async def listar_cardapios(
+    repo_cardapio: RCardapio = Depends(obter_repo_cardapio)
+):
+    return repo_cardapio.consultar_todos()
  
 @router.get('/cardapio/{codigo_cardapio}')
-async def consultar_cardapio(codigo_cardapio: str):
- 
-    if codigo_cardapio not in db.banco_cardapios:
+async def consultar_cardapio(codigo_cardapio: str,
+    repo_cardapio: RCardapio = Depends(obter_repo_cardapio)
+):
+    encontrado = repo_cardapio.consultar(codigo_cardapio)
+
+    if not encontrado:
         raise HTTPException(status.HTTP_404_NOT_FOUND,
             'Cardápio não encontrado.')
  
-    return db.banco_cardapios[codigo_cardapio]
+    return encontrado
  
 @router.post('/cardapio/', status_code=status.HTTP_201_CREATED)
-async def cadastrar_cardapio(cardapio: dtos.CardapioIn,
-    util: Utilidades = Depends(Utilidades)):
+async def cadastrar_cardapio(dto_cardapio: dtos.CardapioIn,
+    util: Utilidades = Depends(Utilidades),
+    repo_cardapio: RCardapio = Depends(obter_repo_cardapio)
+):
+    codigo = util.criar_codigo(dto_cardapio.nome)
  
-    codigo = util.criar_codigo(cardapio.nome)
- 
-    if codigo in db.banco_cardapios:
+    if repo_cardapio.consultar(codigo):
         raise HTTPException(status.HTTP_400_BAD_REQUEST,
-            'Código já existe.')
+            'Cardápio com código similar já existe.')
  
-    db.banco_cardapios[codigo] = cardapio.model_dump()
-    db.banco_cardapios[codigo]['codigo'] = codigo
-    return db.banco_cardapios[codigo]
+    repo_cardapio.criar(codigo, dto_cardapio.nome,
+        dto_cardapio.descricao)
+    
+    return repo_cardapio.consultar(codigo)
  
 @router.put('/cardapio/{codigo_cardapio}')
-async def alterar_cardapio(codigo_cardapio: str, cardapio: dtos.CardapioIn):
- 
-    if codigo_cardapio not in db.banco_cardapios:
+async def alterar_cardapio(codigo_cardapio: str, 
+    dto_cardapio: dtos.CardapioIn,
+    repo_cardapio: RCardapio = Depends(obter_repo_cardapio)
+): 
+    encontrado = repo_cardapio.consultar(codigo_cardapio)
+
+    if not encontrado:
         raise HTTPException(status.HTTP_404_NOT_FOUND,
             'Cardápio não encontrado.')
  
-    db.banco_cardapios[codigo_cardapio] = cardapio.model_dump() 
-    db.banco_cardapios[codigo_cardapio]['codigo'] = codigo_cardapio
-    return db.banco_cardapios[codigo_cardapio]
+    repo_cardapio.alterar(codigo_cardapio, dto_cardapio.nome,
+        dto_cardapio.descricao)
+    
+    return repo_cardapio.consultar(codigo_cardapio)
  
 @router.delete('/cardapio/{codigo_cardapio}')
-async def remover_cardapio(codigo_cardapio: str):
- 
-    if codigo_cardapio not in db.banco_cardapios:
+async def remover_cardapio(codigo_cardapio: str,
+    repo_cardapio: RCardapio = Depends(obter_repo_cardapio),
+    repo_produto: RProduto = Depends(obter_repo_produto)
+): 
+    encontrado = repo_cardapio.consultar(codigo_cardapio)
+
+    if not encontrado:
         raise HTTPException(status.HTTP_404_NOT_FOUND,
             'Cardápio não encontrado.')
     
-    for produto in db.banco_produtos.items():
-        if produto['codigo_cardapio'] == codigo_cardapio:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST,
-            'Não é possível deletar. Cardápio possui produtos.')
+    if repo_produto.consultar_todos(codigo_cardapio=codigo_cardapio):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST,
+        'Não é possível deletar. Cardápio possui produtos.')
  
-    return db.banco_cardapios.pop(codigo_cardapio)
+    repo_cardapio.remover(codigo_cardapio)
+
+    return encontrado
  
 @router.patch('/cardapio/{codigo_cardapio}')
 async def alterar_descricao_cardapio(codigo_cardapio: str, 
-    descricao: dtos.DescricaoCardapio):
- 
-    if codigo_cardapio not in db.banco_cardapios:
+    descricao_cardapio: dtos.DescricaoCardapio,
+    repo_cardapio: RCardapio = Depends(obter_repo_cardapio)
+): 
+    encontrado = repo_cardapio.consultar(codigo_cardapio)
+
+    if not encontrado:
         raise HTTPException(status.HTTP_404_NOT_FOUND,
             'Cardápio não encontrado.')
  
-    db.banco_cardapios[codigo_cardapio]['descricao'] = descricao.descricao
-    return db.banco_cardapios[codigo_cardapio]
+    repo_cardapio.alterar(codigo_cardapio,
+        encontrado.nome, descricao_cardapio.descricao)
+    
+    return repo_cardapio.consultar(codigo_cardapio)
