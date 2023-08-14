@@ -33,4 +33,12 @@ VALUES
     ('Batata Frita', 'Batata Frita', 10.90, 'vegano', 'fastfood', 'batata-frita'),
     ('X Burguer', 'Hambúrguer com Queijo', 15.90, 'padrao', 'fastfood', 'x-burguer');
 
+CREATE TABLE IF NOT EXISTS usuario (
+    nome_usuario TEXT PRIMARY KEY,
+    nome_completo TEXT NOT NULL UNIQUE,
+    cargo TEXT NOT NULL,
+    salt_senha BLOB NOT NULL,
+    hash_senha BLOB NOT NULL
+);
+
 COMMIT;

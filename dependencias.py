@@ -1,10 +1,24 @@
+from dotenv import dotenv_values
+from fastapi.security import OAuth2PasswordBearer
 from repositorio_produto import RepositorioProduto
 from repositorio_cardapio import RepositorioCardapio
+from repositorio_usuario import RepositorioUsuario
+from autenticacao import Autenticador
 
-NOME_DB = 'db.sqlite'
+ENV = dotenv_values()
 
 def obter_repo_cardapio():
-    return RepositorioCardapio(NOME_DB)
+    return RepositorioCardapio(ENV['NOME_DB'])
 
 def obter_repo_produto():
-    return RepositorioProduto(NOME_DB)
+    return RepositorioProduto(ENV['NOME_DB'])
+
+def obter_repo_usuario():
+    return RepositorioUsuario(ENV['NOME_DB'])
+
+def obter_autenticador():
+    return Autenticador(ENV['ALGORITMO'], ENV['CHAVE_PRIVADA'], 
+        ENV['CHAVE_PUBLICA'], int(ENV['VALIDADE_TOKEN']), 
+        int(ENV['CUSTO_SALT']))
+
+dependencia_token = OAuth2PasswordBearer(tokenUrl=ENV['URL_TOKEN'])

@@ -1,4 +1,5 @@
 import unicodedata
+from pydantic import SecretStr
 
 class Utilidades:
     @staticmethod
@@ -20,8 +21,36 @@ class Utilidades:
         return nome   
     
     @staticmethod
-    def is_alnum_under(val: str) -> str:
-        for c in val:
+    def is_alnum_hyphen(texto: str) -> str:
+        for c in texto:
             if not c.isalnum() and c != '-':
                 raise ValueError
-        return val
+        return texto
+    
+    @staticmethod
+    def is_alpha_dot(texto: str) -> str:
+        for c in texto:
+            if not c.isalpha() and c != '.':
+                raise ValueError
+        return texto
+    
+    @staticmethod
+    def is_alpha_space(texto: str) -> str:
+        for c in texto:
+            if not c.isalpha() and c != ' ':
+                raise ValueError
+        return texto
+        
+    @staticmethod
+    def is_alnum_space(texto: str) -> str:
+        for c in texto:
+            if not c.isalnum() and c != ' ':
+                raise ValueError
+        return texto
+
+    @staticmethod
+    def validar_senha(senha: SecretStr) -> SecretStr:
+        for c in senha.get_secret_value():
+            if not c.isalnum() and c not in '._?!@#$%&-+*=':
+                raise ValueError
+        return senha
