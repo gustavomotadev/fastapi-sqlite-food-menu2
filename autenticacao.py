@@ -31,7 +31,7 @@ class Autenticador(object):
         token = jwt.encode(dados, self.chave_privada, self.algoritmo_chave)
         return token
     
-    def validar_token_jwt(self, token: str) -> dict | None:
+    def validar_token_jwt(self, token: str) -> dict:
         try:
             dados = jwt.decode(token, self.chave_publica, self.algoritmo_chave, 
                 options={"require": ["iat", "exp"]})
